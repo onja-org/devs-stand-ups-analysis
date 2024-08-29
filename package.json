@@ -18,8 +18,5 @@
     "google-auth-library": "^9.14.0",
     "google-spreadsheet": "^4.1.2",
     "googleapis": "^143.0.0"
-  },
-  "engines": {
-    "node": "16.x"
   }
 }
