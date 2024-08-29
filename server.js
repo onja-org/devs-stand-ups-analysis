@@ -7,8 +7,8 @@ app.use(express.json());
 const PORT = process.env.port || 4000;
 app.use(cors());
 
-app.post('/api/update-data', updateSpreadSheetData);
-app.post('/api/send-reminder', sendReminder);
+app.get('/api/update-data', updateSpreadSheetData);
+app.get('/api/send-reminder', sendReminder);
 
 // Set up Express app
 app.listen(PORT, () => {
