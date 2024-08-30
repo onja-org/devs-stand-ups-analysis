@@ -140,11 +140,9 @@ async function updateSpreadSheetData (_req, res) {
 async function sendReminder(_req, res) {
     try {
         const groupedMessages = await getAllMessagesByUser();
-        const usersWhoHaveNotPostedForAWeek = ["USP0XSXCM"];
-
-        // , ...groupedMessages
-        // .filter(user => user.isBeforeSevenDaysAgo)
-        // .map(user => user.id)
+        const usersWhoHaveNotPostedForAWeek = ["USP0XSXCM", ...groupedMessages
+        .filter(user => user.isBeforeSevenDaysAgo)
+        .map(user => user.id)]
         
         for(const userId of usersWhoHaveNotPostedForAWeek) {
             await web.chat.postMessage({
