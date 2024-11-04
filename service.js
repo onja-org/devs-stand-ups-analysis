@@ -155,6 +155,7 @@ async function sendReminder(_req, res) {
                 text: `Dear <@${userId}>, this is just a friendly reminder to post your daily stand-up in the <#${channelId}> channel whenever you have some time, as you have been quiet for a while. Thanks for the collaboration!`,
             });
         }
+
         await doc.loadInfo();
         const sheet = doc.sheetsById[sheetId];
 
@@ -162,19 +163,25 @@ async function sendReminder(_req, res) {
             return res.status(404).json({ success: false, error: 'Sheet not found' });
         }
 
-        // Load all rows from the sheet
         const rows = await sheet.getRows();
         const columns = await sheet.headerValues;
-        // Iterate over each row and update "Has Been Reminded?" if "Is Before Seven Days Ago?" is "Yes"
+        let rowsUpdated = 0;
         const indexOfIsBeforeSevenDaysAgo = columns.findIndex(column => column.includes("Seven Days"));
         const indexOfHasBeenReminded = columns.findIndex(column => column.includes("Remind"));
+        // Iterate over each row and update "Has Been Reminded?" if "Is Before Seven Days Ago?" is "Yes"
         for (const row of rows) {
             if (row._rawData[indexOfIsBeforeSevenDaysAgo] === "Yes") {
-                row._rawData[indexOfHasBeenReminded] = "Yes";  // Update the "Has Been Reminded?" column to "Yes"
-                await row.save();  // Save the changes for this row
+                row._rawData[indexOfHasBeenReminded] = "Yes";
+                await row.save();
+                rowsUpdated++;
             }
         }
-        res.json({ success: true, message: "Reminders sent" });
+        // Check if any rows were updated and send appropriate response
+        if (rowsUpdated > 0) {
+            res.json({ success: true, message: `Reminders sent and ${rowsUpdated} rows updated with reminder status.` });
+        } else {
+            res.json({ success: true, message: "Reminders sent but no rows required updating." });
+        }
     } catch (error) {
         console.error('Error sending message:', error);
     }
