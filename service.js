@@ -1,6 +1,6 @@
 const { WebClient } = require('@slack/web-api');
-const {GoogleSpreadsheet} = require('google-spreadsheet');
-const {JWT} = require('google-auth-library');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { JWT } = require('google-auth-library');
 require('dotenv').config();
 const privateKey = process.env.SPREADSHEET_PRIVATE_KEY.replace(/\\n/g, '\n');
 const clientEmail = process.env.SPREADSHEET_CLIENT_EMAIL;
@@ -22,7 +22,7 @@ async function getUsersInChannel() {
         const userPromises = result.members.map(userId => web.users.info({ user: userId }));
         const users = (await Promise.all(userPromises)).map(user => {
             const { id, profile } = user.user;
-            if(!['Sam', 'Adria', 'Grace Henitsoa', "Onja2", "Marieke", 'Ivan', ''].includes(profile.display_name)) {
+            if (!['Sam', 'Adria', 'Grace Henitsoa', "Onja2", "Marieke", 'Ivan', ''].includes(profile.display_name)) {
                 return { id, name: profile.display_name, status: profile.status_text }
             }
         }).filter(user => Boolean(user));
@@ -33,7 +33,7 @@ async function getUsersInChannel() {
 }
 
 function formatDate(timestamp) {
-    if(!timestamp) return 'No date';
+    if (!timestamp) return 'No date';
     const date = new Date(Math.floor(parseInt(timestamp)) * 1000);
     const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
     const formattedDate = date.toLocaleDateString('en-GB', options);
@@ -74,16 +74,16 @@ async function getAllMessagesByUser() {
         const messagesByUser = allMessages
             .map((message) => ({ user: message.user, date: formatDate(message.ts) }))
             .filter(message => message.user === user?.id);
-    
+
         // Calculate the date two days ago
         const SevenDaysAgo = new Date();
         SevenDaysAgo.setDate(SevenDaysAgo.getDate() - 7);
         SevenDaysAgo.setHours(0, 0, 0, 0); // Set time to midnight
-    
+
         // Filter based on last_message_date being before two days ago
         const lastMessageDate = new Date(messagesByUser[1]?.date);
         const isBeforeSevenDaysAgo = lastMessageDate < SevenDaysAgo;
-    
+
         return {
             id: user.id,
             name: user.name,
@@ -96,8 +96,8 @@ async function getAllMessagesByUser() {
     return groupedMessages;
 }
 
-async function updateSpreadSheetData (_req, res) {
-    if(!clientEmail || !privateKey) {
+const loadSpreadsheet = async () => {
+    if (!clientEmail || !privateKey) {
         return res.status(500).json({ success: false, error: 'Missing credentials' });
     }
     const serviceAccountAuth = new JWT({
@@ -107,8 +107,12 @@ async function updateSpreadSheetData (_req, res) {
     });
 
     const doc = new GoogleSpreadsheet(spreadsheetId, serviceAccountAuth);
+    return doc;
+}
 
+async function updateSpreadSheetData(_req, res) {
     try {
+        const doc = await loadSpreadsheet();
         await doc.loadInfo();
         const sheet = doc.sheetsById[sheetId];
 
@@ -124,13 +128,13 @@ async function updateSpreadSheetData (_req, res) {
             "Number Of Stand-ups": user.length,
             "Last Message Date": user.last_message_date,
             "Is Before Seven Days Ago?": user.isBeforeSevenDaysAgo ? "Yes" : "No",
-            "Has Been Reminded?": user.isBeforeSevenDaysAgo ? "Yes" : "No",
+            "Has Been Reminded?": "No",
         })).sort((a, b) => b['Number Of Stand-ups'] - a['Number Of Stand-ups']);
 
         for (const item of rowsData) {
             await sheet.addRow(item);
         }
-        res.json({ success: true, message: "Data updated" }); 
+        res.json({ success: true, message: "Data updated" });
     } catch (e) {
         console.error('Error interacting with Google Sheets:', e);
         return res.status(500).json({ success: false, error: 'Server error' });
@@ -139,16 +143,36 @@ async function updateSpreadSheetData (_req, res) {
 
 async function sendReminder(_req, res) {
     try {
+        const doc = await loadSpreadsheet();
         const groupedMessages = await getAllMessagesByUser();
         const usersWhoHaveNotPostedForAWeek = ["USP0XSXCM", ...groupedMessages
-        .filter(user => user.isBeforeSevenDaysAgo)
-        .map(user => user.id)]
-        
+            .filter(user => user.isBeforeSevenDaysAgo)
+            .map(user => user.id)].filter(userId => userId !== 'USNGMG1KN');
+
         for(const userId of usersWhoHaveNotPostedForAWeek) {
             await web.chat.postMessage({
                 channel: userId,
                 text: `Dear <@${userId}>, this is just a friendly reminder to post your daily stand-up in the <#${channelId}> channel whenever you have some time, as you have been quiet for a while. Thanks for the collaboration!`,
             });
+        }
+        await doc.loadInfo();
+        const sheet = doc.sheetsById[sheetId];
+
+        if (!sheet) {
+            return res.status(404).json({ success: false, error: 'Sheet not found' });
+        }
+
+        // Load all rows from the sheet
+        const rows = await sheet.getRows();
+        const columns = await sheet.headerValues;
+        // Iterate over each row and update "Has Been Reminded?" if "Is Before Seven Days Ago?" is "Yes"
+        const indexOfIsBeforeSevenDaysAgo = columns.findIndex(column => column.includes("Seven Days"));
+        const indexOfHasBeenReminded = columns.findIndex(column => column.includes("Remind"));
+        for (const row of rows) {
+            if (row._rawData[indexOfIsBeforeSevenDaysAgo] === "Yes") {
+                row._rawData[indexOfHasBeenReminded] = "Yes";  // Update the "Has Been Reminded?" column to "Yes"
+                await row.save();  // Save the changes for this row
+            }
         }
         res.json({ success: true, message: "Reminders sent" });
     } catch (error) {
