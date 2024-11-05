@@ -227,23 +227,6 @@ async function loadThisMonthSheet() {
             title: sheetName,
             headerValues: ['Developer', 'Number of Stand-ups', 'Number of Reminders', 'Weekly Average', 'Comments from Mentor', 'Action Taken']
         });
-        const startRow = 1; // A1 notation starts at row 1
-        const endRow = 19; // End at row 19
-        const startColumn = 1; // A is the first column
-        const endColumn = 4; // D is the fourth column
-
-        // Protect the specified range
-        await sheet.addProtectedRange({
-            range: {
-                startRowIndex: startRow - 1, // 0-indexed for API
-                endRowIndex: endRow,
-                startColumnIndex: startColumn - 1,
-                endColumnIndex: endColumn,
-            },
-            description: 'Protecting range A1:D19',
-            warningOnly: false, // Set to true if you want a warning instead of blocking
-            editors: [clientEmail, 'rinon.ten@onja.org']
-        });
     }
     return sheet;
 }
