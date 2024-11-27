@@ -21,8 +21,8 @@ cron.schedule('15 8 * * 1', async () => {
     timezone: "Etc/GMT-3"
 });
 
-// app.get('/api/update-data', updateSpreadSheetData);
-// app.get('/api/send-reminder', sendReminder);
+app.get('/api/update-data', updateSpreadSheetData);
+app.get('/api/send-reminder', sendReminder);
 
 // Set up Express app
 app.listen(PORT, () => {
