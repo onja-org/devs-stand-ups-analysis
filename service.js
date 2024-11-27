@@ -142,7 +142,7 @@ async function updateSpreadSheetData(_req, res) {
         for (const item of rowsData) {
             await sheet.addRow(item);
         }
-        await updateMontlyStats();
+        await updateMonthlyStats();
         res.json({ success: true, message: "Data updated" });
     } catch (e) {
         console.error('Error interacting with Google Sheets:', e);
@@ -231,26 +231,44 @@ async function loadThisMonthSheet() {
     return sheet;
 }
 
-async function updateMontlyStats() {
+async function updateMonthlyStats() {
     try {
-        const sheet = await loadThisMonthSheet();
-        await sheet.clearRows()
-        const groupedMessages = await getAllMessagesByUser();
+        const sheet = await loadThisMonthSheet(); // Load the sheet
+        const existingRows = await sheet.getRows(); // Fetch all existing rows
+        const groupedMessages = await getAllMessagesByUser(); // Get new data
+
         const rowsData = groupedMessages.map(message => ({
-            "Developer": message.name,
+            Developer: message.name,
             "Number of Stand-ups": message.number_of_messages_current_month,
             "Weekly Average": message.weekly_average,
             "Number of Reminders": 0
-        })).sort((a, b) => b['Number of Stand-ups'] - a['Number of Stand-ups']);
+        }));
 
-        for (const item of rowsData) {
-            await sheet.addRow(item);
+        for (const rowData of rowsData) {
+            const matchingRow = existingRows.find(row => {
+                return row._rawData[0].trim().toLowerCase() === rowData.Developer.trim().toLowerCase()
+            });
+
+            if (matchingRow) {
+                // Update the row
+                matchingRow._rawData[1] = rowData['Number of Stand-ups'];
+                matchingRow._rawData[2] = matchingRow._rawData[2];
+                matchingRow._rawData[3] = rowData["Weekly Average"];
+                try {
+                    await matchingRow.save(); // Save changes
+                    console.log('Matching row saved successfully!');
+                } catch (error) {
+                    console.error('Error saving matching row:', error);
+                }
+            } else {
+                // Add new row if no match is found
+                await sheet.addRow(rowData);
+            }
         }
-
     } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('Error updating monthly stats:', error);
     }
-};
+}
 
 module.exports = {
     updateSpreadSheetData,
