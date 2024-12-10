@@ -22,7 +22,7 @@ async function getUsersInChannel() {
         const userPromises = result.members.map(userId => web.users.info({ user: userId }));
         const users = (await Promise.all(userPromises)).map(user => {
             const { id, profile } = user.user;
-            if (!['Sam', 'Adria', 'Grace Henitsoa', "Onja2", "Marieke", 'Ivan', ''].includes(profile.display_name)) {
+            if (!['Sam', 'Adria', 'Grace Henitsoa', "Onja2", "Marieke", 'Ivan', 'Ahmed', 'Virginie', 'Synthia'].includes(profile.display_name)) {
                 return { id, name: profile.display_name, status: profile.status_text }
             }
         }).filter(user => Boolean(user));
