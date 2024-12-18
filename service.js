@@ -25,7 +25,7 @@ async function getUsersInChannel() {
             if (!['Sam', 'Adria', 'Grace Henitsoa', "Onja2", "Marieke", 'Ivan', 'Ahmed', 'Virginie', 'Synthia'].includes(profile.display_name)) {
                 return { id, name: profile.display_name, status: profile.status_text }
             }
-        }).filter(user => Boolean(user));
+        }).filter(user => Boolean(user?.name));
         return users;
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -74,7 +74,6 @@ async function getAllMessagesByUser() {
         const messagesByUser = allMessages
             .map((message) => ({ user: message.user, date: formatDate(message.ts) }))
             .filter(message => message.user === user?.id);
-
         // Calculate the date two days ago
         const SevenDaysAgo = new Date();
         SevenDaysAgo.setDate(SevenDaysAgo.getDate() - 7);
