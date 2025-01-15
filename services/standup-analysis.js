@@ -1,6 +1,6 @@
 const { WebClient } = require('@slack/web-api');
 const { loadSpreadsheet } = require('../utils');
-
+require('dotenv').config();
 const spreadsheetId = process.env.DEVS_STAND_UPS_SPREADSHEET_ID;
 const sheetId = 0;
 const token = process.env.DEVS_STAND_UPS_SLACK_APP_TOKEN;

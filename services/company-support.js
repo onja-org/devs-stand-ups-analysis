@@ -1,7 +1,7 @@
 const { loadSpreadsheet } = require('../utils');
 const { getUsersInChannel } = require('./standup-analysis');
 const { WebClient } = require('@slack/web-api');
-
+require('dotenv').config();
 const COMPANY_SUPPORT_TIME_SLACK_TOKEN = process.env.COMPANY_SUPPORT_TIME_SLACK_TOKEN;
 const supportTimeSlackWeb = new WebClient(COMPANY_SUPPORT_TIME_SLACK_TOKEN);
 
@@ -51,11 +51,11 @@ async function sendCompanySupportTimeReminder() {
         //     sendMessage(status.slackId, message);
         // })
         const message = 
-            `Reminder:\nDear <@USP0XSXCM>, this is a friendly reminder to fill out the <https://forms.gle/4qyjQaBpZk6H2c6A7|form> about the support you received last week at your company.\nThis is very important for the Enterprise team, and it won't take you longer than 1-2 minutes.\nThanks for your collaboration!`
+            `Reminder:\nDear <@USP0XSXCM>, this is a friendly reminder to fill out the <https://docs.google.com/forms/d/e/1FAIpQLSc92wEBcds8PO6S7oYXL0i8da7tUYVZTxDPRkkfzfKy94JyKA/viewform|form> about the support you received last week at your company.\nThis is very important for the Enterprise team, and it won't take you longer than 1-2 minutes.\nThanks for your collaboration!`
         sendMessage("USP0XSXCM", message);
 
         const message2 = 
-        `Reminder:\nDear <@U06CM96F7HU>, this is a friendly reminder to fill out the <https://forms.gle/4qyjQaBpZk6H2c6A7|form> about the support you received last week at your company.\nThis is very important for the Enterprise team, and it won't take you longer than 1-2 minutes.\nThanks for your collaboration!`
+        `Reminder:\nDear <@U06CM96F7HU>, this is a friendly reminder to fill out the <https://docs.google.com/forms/d/e/1FAIpQLSc92wEBcds8PO6S7oYXL0i8da7tUYVZTxDPRkkfzfKy94JyKA/viewform|form> about the support you received last week at your company.\nThis is very important for the Enterprise team, and it won't take you longer than 1-2 minutes.\nThanks for your collaboration!`
     sendMessage("U06CM96F7HU", message2);
         } catch (error) {
         console.error('Error loading the specific sheet:', error);
