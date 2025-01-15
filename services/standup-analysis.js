@@ -1,10 +1,10 @@
 const { WebClient } = require('@slack/web-api');
 const { loadSpreadsheet } = require('../utils');
 
-const spreadsheetId = process.env.SPREADSHEET_ID;
+const spreadsheetId = process.env.DEVS_STAND_UPS_SPREADSHEET_ID;
 const sheetId = 0;
-const token = process.env.SLACK_APP_TOKEN;
-const channelId = process.env.SLACK_CHANNEL_ID;
+const token = process.env.DEVS_STAND_UPS_SLACK_APP_TOKEN;
+const channelId = process.env.DEVS_STAND_UPS_SLACK_CHANNEL_ID;
 // Initialize Slack Web API client
 const web = new WebClient(token);
 

@@ -20,7 +20,7 @@ async function sendMessage(channel, text) {
 
 async function sendCompanySupportTimeReminder() {
     try {
-        const doc = await loadSpreadsheet("1hYQL6PEehE0yDCQEQsCMlExEnpOZ4uKsamV2m0uKUUg");
+        const doc = await loadSpreadsheet(process.env.COMPANY_SUPPORT_TIME_SPREADSHEET_ID);
         await doc.loadInfo(); // Load the document properties
         const sheetTitle = "Weekly Check";
         // Access the sheet by title
