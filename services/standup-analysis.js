@@ -1,9 +1,6 @@
 const { WebClient } = require('@slack/web-api');
-const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT } = require('google-auth-library');
-require('dotenv').config();
-const privateKey = process.env.SPREADSHEET_PRIVATE_KEY.replace(/\\n/g, '\n');
-const clientEmail = process.env.SPREADSHEET_CLIENT_EMAIL;
+const { loadSpreadsheet } = require('../utils');
+
 const spreadsheetId = process.env.SPREADSHEET_ID;
 const sheetId = 0;
 const token = process.env.SLACK_APP_TOKEN;
@@ -23,7 +20,7 @@ async function getUsersInChannel() {
         const users = (await Promise.all(userPromises)).map(user => {
             const { id, profile } = user.user;
             if (!['Sam', 'Adria', 'Grace Henitsoa', "Onja2", "Marieke", 'Ivan', 'Ahmed', 'Virginie', 'Synthia'].includes(profile.display_name)) {
-                return { id, name: profile.display_name, status: profile.status_text }
+                return { id, real_name: profile.real_name, name: profile.display_name, status: profile.status_text }
             }
         }).filter(user => Boolean(user?.name));
         return users;
@@ -103,23 +100,9 @@ async function getAllMessagesByUser() {
     return groupedMessages;
 }
 
-const loadSpreadsheet = async () => {
-    if (!clientEmail || !privateKey) {
-        return res.status(500).json({ success: false, error: 'Missing credentials' });
-    }
-    const serviceAccountAuth = new JWT({
-        email: String(clientEmail),
-        key: String(privateKey),
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-
-    const doc = new GoogleSpreadsheet(spreadsheetId, serviceAccountAuth);
-    return doc;
-}
-
 async function updateSpreadSheetData(_req, res) {
     try {
-        const doc = await loadSpreadsheet();
+        const doc = await loadSpreadsheet(spreadsheetId);
         await doc.loadInfo();
         const sheet = doc.sheetsById[sheetId];
 
@@ -151,7 +134,7 @@ async function updateSpreadSheetData(_req, res) {
 
 async function sendReminder(_req, res) {
     try {
-        const doc = await loadSpreadsheet();
+        const doc = await loadSpreadsheet(spreadsheetId);
         const groupedMessages = await getAllMessagesByUser();
         const usersWhoHaveNotPostedForAWeek = ["USP0XSXCM", ...groupedMessages
             .filter(user => user.isBeforeSevenDaysAgo)
@@ -212,7 +195,7 @@ function getMonthName(monthIndex) {
 }
 
 async function loadThisMonthSheet() {
-    const doc = await loadSpreadsheet();
+    const doc = await loadSpreadsheet(spreadsheetId);
     await doc.loadInfo();
     const allSheets = doc.sheetsByIndex.map(sheet => sheet.title);
     const todayMonth = getMonthName(new Date().getMonth() + 1);
@@ -270,6 +253,7 @@ async function updateMonthlyStats() {
 }
 
 module.exports = {
+    getUsersInChannel,
     updateSpreadSheetData,
     sendReminder
 };

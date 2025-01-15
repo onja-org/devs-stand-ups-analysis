@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const cron = require('node-cron');
-const { updateSpreadSheetData, sendReminder } = require('./service');
+const { updateSpreadSheetData, sendReminder } = require('./services/standup-analysis');
+const { sendCompanySupportTimeReminder } = require('./services/company-support');
 
 const app = express();
 app.use(express.json());
@@ -23,6 +24,7 @@ cron.schedule('15 8 * * 1', async () => {
 
 app.get('/api/update-data', updateSpreadSheetData);
 app.get('/api/send-reminder', sendReminder);
+app.get('/api/send-company-support-time-reminder', sendCompanySupportTimeReminder)
 
 // Set up Express app
 app.listen(PORT, () => {
