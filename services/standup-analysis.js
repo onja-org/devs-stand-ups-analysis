@@ -138,7 +138,7 @@ async function sendReminder(_req, res) {
         const groupedMessages = await getAllMessagesByUser();
         const usersWhoHaveNotPostedForAWeek = ["USP0XSXCM", ...groupedMessages
             .filter(user => user.isBeforeSevenDaysAgo)
-            .map(user => user.id)].filter(userId => userId !== 'USNGMG1KN');
+            .map(user => user.id)].filter(userId => userId !== 'USP0N7SGG');
 
         for (const userId of usersWhoHaveNotPostedForAWeek) {
             await web.chat.postMessage({
